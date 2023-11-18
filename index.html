@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulação de Banco de Dados com Árvore BST</title>
+    <style>
+        /* Adicione estilos conforme necessário */
+    </style>
+</head>
+<body>
+    <h1>Simulação de Banco de Dados com Árvore BST</h1>
+    
+    <div id="formInputs">
+        <label for="nomeTabela">Nome da Tabela:</label>
+        <input type="text" id="nomeTabela">
+        
+        <label for="quantidadeColunas">Quantidade de Colunas:</label>
+        <input type="number" id="quantidadeColunas" min="1" max="10">
+        
+        <div id="nomesColunas"></div>
+    </div>
+    
+    <button id="criarTabelaBtn">Criar Tabela</button>
+    <button id="mostrarTabelaBtn">Mostrar Tabela</button>
+    <button id="mostrarTodasTabelasBtn">Mostrar Todas as Tabelas</button>
+    <button id="inserirRegistroBtn">Inserir Registro</button>
+    <button id="mostrarRegistrosBtn">Mostrar Registros</button>
+
+    <div id="tabelaOutput"></div>
+
+    <script>
+        class No {
+            constructor(valor) {
+                this.valor = valor;
+                this.tabela = null;
+                this.esquerda = null;
+                this.direita = null;
+            }
+        }
+
+        class ArvoreBinariaBusca {
+            constructor() {
+                this.raiz = null;
+            }
+
+            inserir(tabela) {
+                if (this.raiz === null) {
+                    this.raiz = new No(tabela.nome);
+                    this.raiz.tabela = tabela;
+                } else {
+                    this._inserirRecursivo(tabela, this.raiz);
+                }
+            }
+
+            _inserirRecursivo(tabela, noAtual) {
+                if (tabela.nome < noAtual.valor) {
+                    if (noAtual.esquerda === null) {
+                        noAtual.esquerda = new No(tabela.nome);
+                        noAtual.esquerda.tabela = tabela;
+                    } else {
+                        this._inserirRecursivo(tabela, noAtual.esquerda);
+                    }
+                } else if (tabela.nome > noAtual.valor) {
+                    if (noAtual.direita === null) {
+                        noAtual.direita = new No(tabela.nome);
+                        noAtual.direita.tabela = tabela;
+                    } else {
+                        this._inserirRecursivo(tabela, noAtual.direita);
+                    }
+                }
+                // Se o nome já existe, pode-se decidir o que fazer (substituir, adicionar, etc.)
+            }
+
+            buscar(nomeTabela) {
+                return this._buscarRecursivo(nomeTabela, this.raiz);
+            }
+
+            _buscarRecursivo(nomeTabela, noAtual) {
+                if (noAtual === null || noAtual.valor === nomeTabela) {
+                    return noAtual ? noAtual.tabela : null;
+                }
+                if (nomeTabela < noAtual.valor) {
+                    return this._buscarRecursivo(nomeTabela, noAtual.esquerda);
+                }
+                return this._buscarRecursivo(nomeTabela, noAtual.direita);
+            }
+
+            mostrarTodas() {
+                const resultados = [];
+                this._mostrarTodasRecursivo(this.raiz, resultados);
+                return resultados;
+            }
+
+            _mostrarTodasRecursivo(noAtual, resultados) {
+                if (noAtual !== null) {
+                    this._mostrarTodasRecursivo(noAtual.esquerda, resultados);
+                    resultados.push(noAtual.tabela);
+                    this._mostrarTodasRecursivo(noAtual.direita, resultados);
+                }
+            }
+
+            inserirRegistro(nomeTabela, valores) {
+                const tabela = this.buscar(nomeTabela);
+
+                if (tabela) {
+                    tabela.registros.push(valores);
+                    console.log(`Registro inserido na tabela ${nomeTabela} com sucesso!`);
+                } else {
+                    console.log(`Tabela ${nomeTabela} não encontrada!`);
+                }
+            }
+
+            mostrarRegistros(nomeTabela) {
+                const tabela = this.buscar(nomeTabela);
+
+                if (tabela) {
+                    const outputDiv = document.getElementById("tabelaOutput");
+                    outputDiv.innerHTML = `<h2>Registros da tabela ${nomeTabela}</h2><ul>`;
+
+                    tabela.registros.forEach(registro => {
+                        outputDiv.innerHTML += `<li>${registro.join(', ')}</li>`;
+                    });
+
+                    outputDiv.innerHTML += `</ul>`;
+                } else {
+                    console.log(`Tabela ${nomeTabela} não encontrada!`);
+                }
+            }
+        }
+
+        const arvore = new ArvoreBinariaBusca();
+
+        document.getElementById("criarTabelaBtn").addEventListener("click", function () {
+            const nomeTabela = document.getElementById("nomeTabela").value;
+            const quantidadeColunas = parseInt(document.getElementById("quantidadeColunas").value);
+
+            const colunas = [];
+            for (let i = 1; i <= quantidadeColunas; i++) {
+                const nomeColuna = prompt(`Digite o nome da Coluna ${i}:`);
+                colunas.push(nomeColuna);
+            }
+
+            const tabela = {
+                nome: nomeTabela,
+                colunas: colunas,
+                registros: [] // Adicionamos um array para armazenar os registros
+            };
+            arvore.inserir(tabela);
+            console.log(`Tabela ${nomeTabela} criada com sucesso!`);
+        });
+
+        document.getElementById("mostrarTabelaBtn").addEventListener("click", function () {
+            const nomeTabela = document.getElementById("nomeTabela").value;
+            const tabela = arvore.buscar(nomeTabela);
+
+            if (tabela) {
+                const outputDiv = document.getElementById("tabelaOutput");
+                outputDiv.innerHTML = `<h2>${nomeTabela}</h2><ul>`;
+                tabela.colunas.forEach(coluna => {
+                    outputDiv.innerHTML += `<li>${coluna}</li>`;
+                });
+                outputDiv.innerHTML += `</ul>`;
+            } else {
+                console.log(`Tabela ${nomeTabela} não encontrada!`);
+            }
+        });
+
+        document.getElementById("mostrarTodasTabelasBtn").addEventListener("click", function () {
+            const todasTabelas = arvore.mostrarTodas();
+            const outputDiv = document.getElementById("tabelaOutput");
+            outputDiv.innerHTML = "<h2>Todas as Tabelas</h2><ul>";
+
+            todasTabelas.forEach(tabela => {
+                outputDiv.innerHTML += `<li>${tabela.nome}</li>`;
+            });
+
+            outputDiv.innerHTML += "</ul>";
+        });
+
+        document.getElementById("inserirRegistroBtn").addEventListener("click", function () {
+            const nomeTabela = document.getElementById("nomeTabela").value;
+            const tabela = arvore.buscar(nomeTabela);
+
+            if (tabela) {
+                const valores = [];
+                tabela.colunas.forEach(coluna => {
+                    const valor = prompt(`Digite o valor para a coluna ${coluna}:`);
+                    valores.push(valor);
+                });
+
+                arvore.inserirRegistro(nomeTabela, valores);
+            } else {
+                console.log(`Tabela ${nomeTabela} não encontrada!`);
+            }
+        });
+
+        document.getElementById("mostrarRegistrosBtn").addEventListener("click", function () {
+            const nomeTabela = document.getElementById("nomeTabela").value;
+            arvore.mostrarRegistros(nomeTabela);
+        });
+    </script>
+</body>
+</html>
